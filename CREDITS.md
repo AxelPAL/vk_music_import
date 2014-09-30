@@ -1,0 +1,1 @@
+Thanks to 43081j for [id3js](https://github.com/43081j/id3)
