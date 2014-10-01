@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" lang="ru">
+    <title>VK Music Import</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+    <link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="mainWrapper pure-g">
+    <div class="pure-u-1-1">
+        <input id="inputFiles" hidden="hidden" class="inputFiles" type="file" multiple>
+
+        <div id="fileDrag">click or drop files here</div>
+    </div>
+    <div class="pure-u-1-1">
+        <table class="pure-table pure-table-striped" id="mainTable">
+            <thead>
+            <th>#</th>
+            <th>Исполнитель</th>
+            <th>Композиция</th>
+            <th>Удалить</th>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
+<script src="id3.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
