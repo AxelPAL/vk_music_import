@@ -23,23 +23,27 @@
     background: rgb(66, 184, 221); /* this is a light blue */
 }
 
-.removeSong{
+.removeSong {
 
 }
-#mainTable, .inputFiles{
+
+#mainTable, .inputFiles {
     margin: 10px auto;
 }
-#mainTable{
+
+#mainTable {
     display: none;
 }
-.inputFiles{
+
+.inputFiles {
     padding-left: 41%;
 }
-.mainWrapper{
+
+.mainWrapper {
 
 }
-#fileDrag
-{
+
+#fileDrag {
     /*display: none;*/
     font-weight: bold;
     text-align: center;
@@ -52,10 +56,36 @@
     cursor: pointer;
 }
 
-#fileDrag.hover
-{
+#fileDrag.hover {
     color: #f00;
     border-color: #f00;
     border-style: solid;
     box-shadow: inset 0 3px 4px #888;
+}
+
+.profile {
+    margin: 30px auto;
+    padding-left: 40%;
+}
+
+.content {
+    display: none;
+}
+
+.avatar-wrapper {
+    position: relative;
+    height: 100px;
+}
+
+.avatar-wrapper > a > img {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    position: absolute;
+}
+.avatar-wrapper + a{
+    display: block;
+    text-align: center;
 }

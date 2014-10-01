@@ -3,6 +3,7 @@
  */
 var vk = {
     data: {},
+    details: {},
     appID: 4571548,
     appPermissions: 10,
     init: function () {
@@ -16,9 +17,29 @@ var vk = {
                 console.log(response);
                 if (response.session) { // Авторизация успешна
                     vk.data.user = response.session.user;
+                    vk.getUserInfo();
+                    activateContent();
                 } else alert("Авторизоваться не удалось!");
             }
         }
+    },
+    getUserInfo: function() {
+        VK.Api.call('users.get', {fields: ["photo_100"]}, function (r) {
+            if (r.response) {
+                r = r.response;
+                if(r[0]){
+                    vk.details = r[0];
+                    var avatarWrapper = $('<div>', {class: "avatar-wrapper"});
+                    var avatarLink = $('<a>', {href: "http://vk.com/id"+vk.details.uid})
+                    var avatar = $('<img>', {src: vk.details.photo_100});
+                    avatarLink.append(avatar);
+                    avatarWrapper.append(avatarLink);
+                    var profileInfo = $('<a>', {href: "http://vk.com/id"+vk.details.uid}).html(vk.details.first_name + " " + vk.details.last_name);
+                    var profile = $("<div>").append(avatarWrapper).append(profileInfo);
+                    $(".authorise").replaceWith(profile);
+                }
+            } else alert("Не удалось получить список аудиозаписей");
+        })
     },
     musicSearch: function (query) {
         VK.Api.call('audio.search', {q: query, count: 1}, function (r) {
@@ -45,7 +66,10 @@ var vk = {
         })
     }
 };
-$.ready(vk.init());
+$(document).on('click', ".authorise", function () {
+    vk.init();
+    console.log(vk.data.user);
+});
 
 
 songs = [];
@@ -181,12 +205,15 @@ $(document).on('click', '.name', function () {
     }
 });
 
+function activateContent() {
+    document.querySelector(".content").style.display = "initial";
+}
+
 /*
 TODO Upload song if VK doesn't have any of it
 TODO folder traversing
 TODO Many music formats (not only mp3)
 TODO Beautiful design
 TODO Saving token at cookies and get it again if its outdated
-TODO Отдельная кнопка авторизации (после авторизации пропадает и появляется инфа о пользователе)
 TODO Отдельная кнопка для добавления песен (при добавлении соответствующая песня пропадает из списка)
 */
