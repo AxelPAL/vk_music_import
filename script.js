@@ -5,7 +5,7 @@ var vk = {
     data: {},
     details: {},
     appID: 4571548,
-    appPermissions: 10,
+    appPermissions: 8,
     init: function () {
         VK.init({apiId: vk.appID});
         load();
