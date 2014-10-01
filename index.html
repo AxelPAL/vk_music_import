@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" lang="ru">
     <title>VK Music Import</title>
+    <link href="favicon.ico" rel="shortcut icon" type="image/x-icon"/>
     <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
     <link href="style.css" rel="stylesheet"/>
 </head>
@@ -16,10 +17,12 @@
     <div class="pure-u-1-1">
         <table class="pure-table pure-table-striped" id="mainTable">
             <thead>
-            <th>#</th>
-            <th>Исполнитель</th>
-            <th>Композиция</th>
-            <th>Удалить</th>
+            <tr>
+                <th>#</th>
+                <th>Исполнитель</th>
+                <th>Композиция</th>
+                <th>Удалить</th>
+            </tr>
             </thead>
             <tbody></tbody>
         </table>
@@ -28,6 +31,7 @@
 
 <script src="//code.jquery.com/jquery-2.1.0.min.js"></script>
 <script src="id3.min.js"></script>
+<script src="//vk.com/js/api/openapi.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

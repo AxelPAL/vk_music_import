@@ -1,16 +1,63 @@
 /**
  * Created by AxelPAL on 01.10.2014.
  */
+var vk = {
+    data: {},
+    appID: 4571548,
+    appPermissions: 10,
+    init: function () {
+        VK.init({apiId: vk.appID});
+        load();
+
+        function load() {
+            VK.Auth.login(authInfo, vk.appPermissions);
+
+            function authInfo(response) {
+                console.log(response);
+                if (response.session) { // Авторизация успешна
+                    vk.data.user = response.session.user;
+                } else alert("Авторизоваться не удалось!");
+            }
+        }
+    },
+    musicSearch: function (query) {
+        VK.Api.call('audio.search', {q: query, count: 1}, function (r) {
+            if (r.response) {
+                r = r.response;
+                for (var i = 0; i < r.length; ++i) {
+                    console.log(r[i]);
+                    if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
+                        vk.musicSongAddToAccount(r[i].aid, r[i].owner_id)
+                    }
+                }
+            } else alert("Не удалось получить список аудиозаписей");
+        })
+    },
+    musicSongAddToAccount: function (audio_id, owner_id) {
+        VK.Api.call('audio.add', {audio_id: audio_id, owner_id: owner_id}, function (r) {
+            console.log(r);
+            if (r.response) {
+                r = r.response;
+                for (var i = 0; i < r.length; ++i) {
+                    console.log(r[i]);
+                }
+            } else alert("Не удалось добавить аудиозапись к вашему аккаунту!");
+        })
+    }
+};
+$.ready(vk.init());
+
+
 songs = [];
 counter = 0;
-document.querySelector('input[type="file"]').onchange = function (e) {
+document.querySelector('input[type="file"]').onchange = function () {
     var files = this.files;
     processSongs(files);
 };
-document.querySelector('#fileDrag').onclick = function (e) {
+document.querySelector('#fileDrag').onclick = function () {
     document.getElementById("inputFiles").click();
 };
-$(document).on('click', '.removeSong', function (e) {
+$(document).on('click', '.removeSong', function () {
     var $this = $(this);
     var id = $this.data('id');
     $this.closest('tr').hide(500, function () {
@@ -62,43 +109,84 @@ function FileSelectHandler(e) {
     FileDragHover(e);
 
     // fetch FileList object
-    if (e.type == 'drop') {
-        var files = e.target.files || e.dataTransfer.files;
-        processSongs(files);
+    if (e.dataTransfer) {
+        var files = e.dataTransfer.files;
+        if (files) {
+            processSongs(files, e);
+        }
     }
-
 }
 
-function processSongs(files) {
+function processSongs(files, e) {
+    for (var i in files) {
+        if (files.hasOwnProperty(i)) {
+            if (files[i].type == "") {
+                //TODO implement directory scan for files
+                var length = e.dataTransfer.files.length;
+                for (var i = 0; i < length; i++) {
+                    var file = e.dataTransfer.files[i];
+                    var entry = e.dataTransfer.items[i].webkitGetAsEntry();
+                    console.log(entry);
+                }
+            } else {
+                processSong(files[i]);
+            }
+        }
+    }
+}
+function processSong(file) {
     var table = document.querySelector("#mainTable");
     var tbody = document.querySelector("#mainTable tbody");
     tbody.innerHTML = "";
     songs = [];
     counter = 0;
-    for (var i in files) {
-        if (files.hasOwnProperty(i)) {
-            id3(files[i], function (err, tags) {
-                if (tags) {
-                    ++counter;
-                    var song = {id: counter, artist: tags.artist, title: tags.title};
-                    var tr = document.createElement('tr');
-                    var td1 = document.createElement('td');
-                    var td2 = document.createElement('td');
-                    var td3 = document.createElement('td');
-                    var td4 = document.createElement('td');
-                    td1.innerHTML = counter.toString();
-                    td2.innerHTML = song.artist;
-                    td3.innerHTML = song.title;
-                    td4.innerHTML = '<button class="removeSong button-error pure-button" data-id="' + counter + '">Remove</button>';
-                    songs.push(song);
-                    tr.appendChild(td1);
-                    tr.appendChild(td2);
-                    tr.appendChild(td3);
-                    tr.appendChild(td4);
-                    tbody.appendChild(tr);
-                    table.style.display = "table";
-                }
-            });
+    id3(file, function (err, tags) {
+        if (tags) {
+            ++counter;
+            var song = {id: counter, artist: tags.artist, title: tags.title};
+            var tr = document.createElement('tr');
+            var td1 = document.createElement('td');
+            var td2 = document.createElement('td');
+            var td3 = document.createElement('td');
+            var td4 = document.createElement('td');
+            td1.innerHTML = counter.toString();
+            td2.innerHTML = song.artist;
+            td2.classList.add("name");
+            td2.setAttribute("data-id", counter);
+            td3.innerHTML = song.title;
+            td4.innerHTML = '<button class="removeSong button-error pure-button" data-id="' + counter + '">Remove</button>';
+            songs.push(song);
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td3);
+            tr.appendChild(td4);
+            tbody.appendChild(tr);
+            table.style.display = "table";
         }
-    }
+    });
 }
+
+$(document).on('click', '.name', function () {
+    var id = $(this).data('id');
+    var object = {};
+    songs.find(function (element) {
+        if (element.id == id) {
+            object = element;
+        }
+    });
+    if (object) {
+        var query = object.artist + " - " + object.title;
+        vk.musicSearch(query);
+
+    }
+});
+
+/*
+TODO Upload song if VK doesn't have any of it
+TODO folder traversing
+TODO Many music formats (not only mp3)
+TODO Beautiful design
+TODO Saving token at cookies and get it again if its outdated
+TODO Отдельная кнопка авторизации (после авторизации пропадает и появляется инфа о пользователе)
+TODO Отдельная кнопка для добавления песен (при добавлении соответствующая песня пропадает из списка)
+*/
