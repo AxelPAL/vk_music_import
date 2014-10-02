@@ -4,6 +4,7 @@
 var vk = {
     data: {},
     details: {},
+    musicCollection: [],
     appID: 4571548,
     appPermissions: 8,
     init: function () {
@@ -39,16 +40,28 @@ var vk = {
                     $(".authorise").replaceWith(profile);
                 }
             } else alert("Не удалось получить список аудиозаписей");
-        })
+            vk.getMusicCollection();
+        });
     },
-    musicSearch: function (query) {
-        VK.Api.call('audio.search', {q: query, count: 1}, function (r) {
+    musicSearch: function (artist, title) {
+        var query = artist + " - " + title;
+        VK.Api.call('audio.search', {q: query, count: 5}, function (r) {
             if (r.response) {
                 r = r.response;
                 for (var i = 0; i < r.length; ++i) {
-                    console.log(r[i]);
                     if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
-                        vk.musicSongAddToAccount(r[i].aid, r[i].owner_id)
+                        if(r[i].artist == artist && r[i].title == title){
+                            var object = {};
+                            songs.find(function (element) {
+                                if (element.artist == artist && element.title == title) {
+                                    object = element;
+                                }
+                            });
+                            if(object.length <= 0){
+                                vk.musicSongAddToAccount(r[i].aid, r[i].owner_id);
+                                break;
+                            }
+                        }
                     }
                 }
             } else alert("Не удалось получить список аудиозаписей");
@@ -56,7 +69,6 @@ var vk = {
     },
     musicSongAddToAccount: function (audio_id, owner_id) {
         VK.Api.call('audio.add', {audio_id: audio_id, owner_id: owner_id}, function (r) {
-            console.log(r);
             if (r.response) {
                 r = r.response;
                 for (var i = 0; i < r.length; ++i) {
@@ -64,11 +76,39 @@ var vk = {
                 }
             } else alert("Не удалось добавить аудиозапись к вашему аккаунту!");
         })
+    },
+    upload: function() {
+        for(var i in songs){
+            if(songs.hasOwnProperty(i)){
+                var object = songs[i];
+                vk.musicSearch(object.artist, object.title);
+                $('.name[data-id="'+ object.id +'"]').closest("tr").hide(500, function () {
+                    $(this).remove();
+                });
+                songs.splice(0,1);
+            }
+        }
+        alert("Загрузка завершена.");
+    },
+    getMusicCollection: function () {
+        console.log(vk.details.uid);
+        VK.Api.call('audio.get', {owner_id: vk.details.uid}, function (r) {
+            if (r.response) {
+                r = r.response;
+                for (var i = 0; i < r.length; ++i) {
+                    var userSong = {artist: r[i].artist, title: r[i].title};
+                    vk.musicCollection.push(userSong);
+                }
+            } else alert("Не удалось получить список ваших аудиозаписей");
+        })
     }
 };
 $(document).on('click', ".authorise", function () {
     vk.init();
     console.log(vk.data.user);
+});
+$(document).on('click', ".upload", function () {
+    vk.upload();
 });
 
 
@@ -215,5 +255,4 @@ TODO folder traversing
 TODO Many music formats (not only mp3)
 TODO Beautiful design
 TODO Saving token at cookies and get it again if its outdated
-TODO Отдельная кнопка для добавления песен (при добавлении соответствующая песня пропадает из списка)
 */
