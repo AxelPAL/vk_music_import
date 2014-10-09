@@ -19,7 +19,8 @@
   "dependencies": {
     "jquery": "~2.1.1",
     "sweetalert": "~0.1.1",
-    "id3": "git://github.com/43081j/id3.git",
-    "Font-Awesome": "https://github.com/FortAwesome/Font-Awesome.git"
+    "id3": "~1.0.2",
+    "Font-Awesome": "~4.2.0",
+    "pure": "~0.5.0"
   }
 }
