@@ -1,0 +1,25 @@
+{
+  "name": "vk-music-import",
+  "version": "1.0.0",
+  "authors": [
+    "AxelPAL"
+  ],
+  "description": "Vk music import from local storage",
+  "main": "index.html",
+  "license": "MIT",
+  "homepage": "http://axelpal.ru",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.1",
+    "sweetalert": "~0.1.1",
+    "id3": "git://github.com/43081j/id3.git",
+    "Font-Awesome": "https://github.com/FortAwesome/Font-Awesome.git"
+  }
+}

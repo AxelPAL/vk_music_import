@@ -1,3 +1,8 @@
+body * {
+    /*font-family: 'Lobster', cursive;*/
+    font-family: 'Ubuntu Condensed', sans-serif;
+    font-size: 1.05em;
+}
 .button-success,
 .button-error,
 .button-warning,
@@ -33,6 +38,7 @@
 
 #mainTable {
     display: none;
+    width:100%;
 }
 
 .inputFiles {
@@ -52,7 +58,7 @@
     color: #555;
     border: 2px dashed #555;
     border-radius: 7px;
-    width: 40%;
+    width: 90%;
     cursor: pointer;
 }
 
@@ -66,10 +72,6 @@
 .profile {
     margin: 30px auto;
     padding-left: 40%;
-}
-
-.content {
-    display: none;
 }
 
 .avatar-wrapper {
@@ -88,4 +90,33 @@
 .avatar-wrapper + a{
     display: block;
     text-align: center;
+}
+.description{
+    padding: 15px;
+    margin-left: 20px;
+    font-size: 16px;
+    box-shadow: 0 0 3px #949494;
+    background-color: #fcffe0;
+}
+.upload{
+    display: block;
+    margin: 0 auto;
+}
+@media only screen and (max-width:1100px) {
+    .auth-text, .remove-span{
+        display: none;
+    }
+}
+@media only screen and (max-width:1000px) {
+    .main-row {
+        width: 100%;
+    }
+    #mainTable {
+        table-layout: fixed;
+        word-break: break-all;
+    }
+}
+
+#fileDrag .fa-file-audio-o{
+    font-size: 26px;
 }

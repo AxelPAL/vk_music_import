@@ -20,7 +20,6 @@ var vk = {
                     vk.data.user = response.session.user;
                     vk.getUserInfo();
                     vk.getUploadServer();
-                    activateContent();
                 } else console.log("Авторизоваться не удалось!");
             }
         }
@@ -40,7 +39,7 @@ var vk = {
                     var profile = $("<div>").append(avatarWrapper).append(profileInfo);
                     $(".authorise").replaceWith(profile);
                 }
-            } else console.log("Не удалось получить список аудиозаписей");
+            } else sweetAlert("","Не удалось получить список аудиозаписей","error");
             vk.getMusicCollection();
         });
     },
@@ -49,31 +48,33 @@ var vk = {
         VK.Api.call('audio.search', {q: query, count: 5}, function (r) {
             if (r.response) {
                 r = r.response;
-                if(r.length <=0){
+                console.log(r.length <=1);
+                if(r.length <=1){
                     vk.uploadSongFile(file);
-                }
-                for (var i = 0; i < r.length; ++i) {
-                    if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
-                        if(r[i].artist == artist && r[i].title == title){
-                            var object = {};
-                            vk.musicCollection.find(function (element) {
-                                if (element.artist == artist && element.title == title) {
-                                    object = element;
+                } else {
+                    for (var i = 0; i < r.length; ++i) {
+                        if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
+                            if(r[i].artist == artist && r[i].title == title){
+                                var object = {};
+                                vk.musicCollection.find(function (element) {
+                                    if (element.artist == artist && element.title == title) {
+                                        object = element;
+                                    }
+                                });
+                                songs.find(function (element) {
+                                    if (element.artist == artist && element.title == title) {
+                                        object = element;
+                                    }
+                                });
+                                if(Object.getOwnPropertyNames(object).length == 0){
+                                    vk.musicSongAddToAccount(r[i].aid, r[i].owner_id);
+                                    break;
                                 }
-                            });
-                            songs.find(function (element) {
-                                if (element.artist == artist && element.title == title) {
-                                    object = element;
-                                }
-                            });
-                            if(object.length <= 0){
-                                vk.musicSongAddToAccount(r[i].aid, r[i].owner_id);
-                                break;
                             }
                         }
                     }
                 }
-            } else console.log("Не удалось получить список аудиозаписей");
+            } else sweetAlert("", "Не удалось найти и добавить песню.", "error");
         })
     },
     musicSongAddToAccount: function (audio_id, owner_id) {
@@ -83,21 +84,25 @@ var vk = {
                 for (var i = 0; i < r.length; ++i) {
                     console.log(r[i]);
                 }
-            } else console.log("Не удалось добавить аудиозапись к вашему аккаунту!");
+            } else sweetAlert("", "Не удалось добавить аудиозапись к вашему аккаунту!", "error");
         })
     },
     upload: function() {
-        for(var i in songs){
-            if(songs.hasOwnProperty(i)){
-                var object = songs[i];
-                vk.musicSearch(object.artist, object.title, object.file);
-                $('.name[data-id="'+ object.id +'"]').closest("tr").hide(500, function () {
-                    $(this).remove();
-                });
-                songs.splice(0,1);
+        if(vk.details){
+            for(var i in songs){
+                if(songs.hasOwnProperty(i)){
+                    var object = songs[i];
+                    vk.musicSearch(object.artist, object.title, object.file);
+                    $('.name[data-id="'+ object.id +'"]').closest("tr").hide(500, function () {
+                        $(this).remove();
+                    });
+                    songs.splice(0,1);
+                }
             }
+            sweetAlert("Загрузка завершена.");
+        } else {
+            sweetAlert("Вы не авторизованы","Пожалуйста, авторизуйтесь Вконтакте.", "error");
         }
-        alert("Загрузка завершена.");
     },
     getMusicCollection: function () {
         VK.Api.call('audio.get', {owner_id: vk.details.uid}, function (r) {
@@ -140,7 +145,7 @@ var vk = {
                                     var userSong = {artist: r[i].artist, title: r[i].title};
                                     vk.musicCollection.push(userSong);
                                 }
-                            } else console.log("Не удалось получить залить вашу запись");
+                            } else console.log("Не удалось залить вашу запись");
                         })
                 }
             }
@@ -282,7 +287,7 @@ function processSong(file) {
             td2.classList.add("name");
             td2.setAttribute("data-id", counter);
             td3.innerHTML = song.title;
-            td4.innerHTML = '<button class="removeSong button-error pure-button" data-id="' + counter + '">Remove</button>';
+            td4.innerHTML = '<button class="removeSong button-error pure-button" data-id="' + counter + '"><i class="fa fa-times"></i><span class="remove-span">Remove</span></button>';
             songs.push(song);
             tr.appendChild(td1);
             tr.appendChild(td2);
@@ -294,13 +299,10 @@ function processSong(file) {
     });
 }
 
-function activateContent() {
-    document.querySelector(".content").style.display = "initial";
-}
-
 /*
 TODO Upload song: show status (may be progress bars) + testing
 TODO folder traversing
 TODO Many music formats (not only mp3)
 TODO Beautiful design
+TODO watch songs array of objects and when its empty and last element wasn't deleted by user - alert succes message
 */
