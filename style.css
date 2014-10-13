@@ -93,7 +93,7 @@ body * {
 }
 .description{
     padding: 15px;
-    margin-left: 20px;
+    margin: 50px 20px 0;
     font-size: 16px;
     box-shadow: 0 0 3px #949494;
     background-color: #fcffe0;
@@ -102,8 +102,11 @@ body * {
     display: block;
     margin: 0 auto;
 }
-@media only screen and (max-width:1100px) {
-    .auth-text, .remove-span{
+.content{
+    margin-right: 20px;
+}
+@media only screen and (max-width:600px) {
+    .remove-span{
         display: none;
     }
 }
@@ -111,8 +114,17 @@ body * {
     .main-row {
         width: 100%;
     }
+    .content{
+        margin-right: 0;
+    }
+    .description{
+        margin-top: 0;
+    }
     #mainTable {
         table-layout: fixed;
         word-break: break-all;
+    }
+    #mainTable thead th:first-of-type{
+        width: 30px;
     }
 }

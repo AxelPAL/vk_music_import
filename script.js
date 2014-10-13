@@ -298,11 +298,3 @@ function processSong(file) {
         }
     });
 }
-
-/*
-TODO Upload song: show status (may be progress bars) + testing
-TODO folder traversing
-TODO Many music formats (not only mp3)
-TODO Beautiful design
-TODO watch songs array of objects and when its empty and last element wasn't deleted by user - alert succes message
-*/
