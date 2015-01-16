@@ -295,7 +295,6 @@ function processSong(file) {
     counter = 0;
     ID3.loadTags(file.name, function () {
         var tags = ID3.getAllTags(file.name);
-        console.log(tags);
         var song = {id: counter, artist: tags.artist, title: tags.title, file: file};
         var tr = document.createElement('tr');
         var td1 = document.createElement('td');
