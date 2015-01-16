@@ -3,7 +3,7 @@
  */
 var vk = {
     data: {},
-    details: {},
+    details: "",
     musicCollection: [],
     appID: 4571548,
     appPermissions: 8,
@@ -43,14 +43,17 @@ var vk = {
             vk.getMusicCollection();
         });
     },
-    musicSearch: function (artist, title, file) {
+    musicSearch: function (song) {
+        var title = song.title;
+        var artist = song.artist;
+        var file = song.file;
         var query = artist + " - " + title;
         VK.Api.call('audio.search', {q: query, count: 5}, function (r) {
+            console.log(r.response);
             if (r.response) {
                 r = r.response;
-                console.log(r.length <=1);
                 if(r.length <=1){
-                    vk.uploadSongFile(file);
+                    vk.uploadSongFile(song);
                 } else {
                     for (var i = 0; i < r.length; ++i) {
                         if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
@@ -61,13 +64,13 @@ var vk = {
                                         object = element;
                                     }
                                 });
-                                songs.find(function (element) {
-                                    if (element.artist == artist && element.title == title) {
-                                        object = element;
-                                    }
-                                });
+                                //songs.find(function (element) {
+                                //    if (element.artist == artist && element.title == title) {
+                                //        object = element;
+                                //    }
+                                //});
                                 if(Object.getOwnPropertyNames(object).length == 0){
-                                    vk.musicSongAddToAccount(r[i].aid, r[i].owner_id);
+                                    vk.musicSongAddToAccount(r[i].aid, r[i].owner_id, song);
                                     break;
                                 }
                             }
@@ -77,14 +80,16 @@ var vk = {
             } else sweetAlert("", "Не удалось найти и добавить песню.", "error");
         })
     },
-    musicSongAddToAccount: function (audio_id, owner_id) {
+    musicSongAddToAccount: function (audio_id, owner_id, object) {
         VK.Api.call('audio.add', {audio_id: audio_id, owner_id: owner_id}, function (r) {
             if (r.response) {
-                r = r.response;
-                for (var i = 0; i < r.length; ++i) {
-                    console.log(r[i]);
+                if(r.response){
+                    vk.removeAddedSong(object);
                 }
-            } else sweetAlert("", "Не удалось добавить аудиозапись к вашему аккаунту!", "error");
+            } else {
+                sweetAlert("", "Не удалось добавить аудиозапись к вашему аккаунту!", "error");
+                console.log(r);
+            }
         })
     },
     upload: function() {
@@ -92,16 +97,30 @@ var vk = {
             for(var i in songs){
                 if(songs.hasOwnProperty(i)){
                     var object = songs[i];
-                    vk.musicSearch(object.artist, object.title, object.file);
-                    $('.name[data-id="'+ object.id +'"]').closest("tr").hide(500, function () {
-                        $(this).remove();
-                    });
-                    songs.splice(0,1);
+                    vk.musicSearch(object);
                 }
             }
             sweetAlert("Загрузка завершена.");
         } else {
             sweetAlert("Вы не авторизованы","Пожалуйста, авторизуйтесь Вконтакте.", "error");
+        }
+    },
+    removeAddedSong: function(song) {
+        var object = {};
+        songs.find(function (element) {
+            if (element.artist == song.artist && element.title == song.title) {
+                object = element;
+            }
+        });
+        console.log(object, song);
+        if(object){
+            songs = songs
+                .filter(function (el) {
+                    return el.id !== song.id;
+                });
+            $('.name[data-id="'+ song.id +'"]').closest("tr").hide(500, function () {
+                $(this).remove();
+            });
         }
     },
     getMusicCollection: function () {
@@ -115,7 +134,7 @@ var vk = {
             } else console.log("Не удалось получить список ваших аудиозаписей");
         })
     },
-    uploadSongFile: function(file) {
+    uploadSongFile: function(object) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '/upload.php');
 
@@ -144,6 +163,7 @@ var vk = {
                                     console.log(r[i]);
                                     var userSong = {artist: r[i].artist, title: r[i].title};
                                     vk.musicCollection.push(userSong);
+                                    vk.removeAddedSong(object);
                                 }
                             } else console.log("Не удалось залить вашу запись");
                         })
@@ -154,7 +174,7 @@ var vk = {
 
         var form = new FormData();
         form.append('serverUrl', vk.serverUrl);
-        form.append('audioFile', file);
+        form.append('audioFile', object.file);
 
         xhr.send(form);
     },
@@ -273,28 +293,30 @@ function processSong(file) {
     tbody.innerHTML = "";
     songs = [];
     counter = 0;
-    id3(file, function (err, tags) {
-        if (tags) {
-            ++counter;
-            var song = {id: counter, artist: tags.artist, title: tags.title, file: file};
-            var tr = document.createElement('tr');
-            var td1 = document.createElement('td');
-            var td2 = document.createElement('td');
-            var td3 = document.createElement('td');
-            var td4 = document.createElement('td');
-            td1.innerHTML = counter.toString();
-            td2.innerHTML = song.artist;
-            td2.classList.add("name");
-            td2.setAttribute("data-id", counter);
-            td3.innerHTML = song.title;
-            td4.innerHTML = '<button class="removeSong button-error pure-button" data-id="' + counter + '"><i class="fa fa-times"></i><span class="remove-span">Remove</span></button>';
-            songs.push(song);
-            tr.appendChild(td1);
-            tr.appendChild(td2);
-            tr.appendChild(td3);
-            tr.appendChild(td4);
-            tbody.appendChild(tr);
-            table.style.display = "table";
-        }
+    ID3.loadTags(file.name, function () {
+        var tags = ID3.getAllTags(file.name);
+        console.log(tags);
+        var song = {id: counter, artist: tags.artist, title: tags.title, file: file};
+        var tr = document.createElement('tr');
+        var td1 = document.createElement('td');
+        var td2 = document.createElement('td');
+        var td3 = document.createElement('td');
+        var td4 = document.createElement('td');
+        td1.innerHTML = counter.toString();
+        td2.innerHTML = song.artist;
+        td2.classList.add("name");
+        td2.setAttribute("data-id", counter);
+        td3.innerHTML = song.title;
+        td4.innerHTML = '<button class="removeSong button-error pure-button" data-id="' + counter + '"><i class="fa fa-times"></i><span class="remove-span">Remove</span></button>';
+        songs.push(song);
+        tr.appendChild(td1);
+        tr.appendChild(td2);
+        tr.appendChild(td3);
+        tr.appendChild(td4);
+        tbody.appendChild(tr);
+        table.style.display = "table";
+        counter++;
+    }, {
+        dataReader: FileAPIReader(file)
     });
 }
