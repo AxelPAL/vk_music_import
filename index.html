@@ -8,6 +8,8 @@
     <link href="bower_components/pure/pure-min.css" rel="stylesheet">
     <link href="bower_components/sweetalert/lib/sweet-alert.css" rel="stylesheet"/>
     <link href="bower_components/Font-Awesome/css/font-awesome.min.css" rel="stylesheet"/>
+    <link href="bower_components/jquery-ui/themes/ui-lightness/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="bower_components/jquery-ui/themes/ui-lightness/theme.css" rel="stylesheet"/>
     <link href="style.css" rel="stylesheet"/>
 </head>
 <body>
@@ -21,7 +23,7 @@
     </div>
     <div class="main-row pure-u-18-24">
         <div class="content">
-               <input id="inputFiles" hidden="hidden" class="inputFiles" type="file" multiple>
+               <input id="inputFiles" hidden="hidden" class="inputFiles" type="file" accept=".mp3,.mp4,.aac" multiple>
 
                 <div id="fileDrag">
                     <i class="fa fa-file-audio-o fa-lg"></i>
@@ -53,7 +55,7 @@
             <p>Каждое новое добавление затирает предыдущую выборку, имейте это ввиду.</p>
             <p>После выбора файлов вам нужно нажать кнопку загрузить и ждать окончания процесса.</p>
             <p>Как это работает и зачем это нужно?</p>
-            <p>Загружать гигабайты музыки - это долго и расточительно, интернет не везде быстрый, а даже если и так, некоторые коллекции занимают терабайты и их проблематично выгрузить на сайт. К тому же, Вконтакте ограничевает количество добавляемых файлов за раз, что само по себе существенная преграда для меломанов.</p>
+            <p>Загружать гигабайты музыки - это долго и расточительно, интернет не везде быстрый, а даже если и так, некоторые коллекции занимают терабайты и их проблематично выгрузить на сайт. К тому же, Вконтакте ограничивает количество добавляемых файлов за раз, что само по себе существенная преграда для меломанов.</p>
             <p>Что делает сервис - анализирует ваши аудиозаписи по ID3-тэгам, ищет эти композиции в ВК и добавляет их в ваши аудиозаписи.</p>
             <p>Если во всём Вконтакте нет этой композиции - она будет загружена из ваших локальных файлов.</p>
             <p>Если вы сейчас подумали, что будет много дублей из-за того, что у вас могут хранится одинаковые композиции или такие песни у вас в ВК уже есть - не переживайте, сервис учитывает это и дублирования не будет совсем.</p>
@@ -61,8 +63,12 @@
         </div>
     </div>
 </div>
-
+<div class="captcha-dialog">
+    <img src="" alt=""/>
+    <input />
+</div>
 <script src="bower_components/jquery/dist/jquery.min.js"></script>
+<script src="bower_components/jquery-ui/jquery-ui.min.js"></script>
 <script src="bower_components/sweetalert/lib/sweet-alert.min.js"></script>
 <script src="bower_components/JavaScript-ID3-Reader/dist/id3-minimized.js"></script>
 <script src="//vk.com/js/api/openapi.js"></script>

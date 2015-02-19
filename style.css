@@ -128,3 +128,6 @@ body * {
         width: 30px;
     }
 }
+.captcha-dialog{
+    display: none;
+}

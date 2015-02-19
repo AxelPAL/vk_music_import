@@ -24,22 +24,22 @@ var vk = {
             }
         }
     },
-    getUserInfo: function() {
+    getUserInfo: function () {
         VK.Api.call('users.get', {fields: ["photo_100"]}, function (r) {
             if (r.response) {
                 r = r.response;
-                if(r[0]){
+                if (r[0]) {
                     vk.details = r[0];
                     var avatarWrapper = $('<div>', {class: "avatar-wrapper"});
-                    var avatarLink = $('<a>', {href: "http://vk.com/id"+vk.details.uid})
+                    var avatarLink = $('<a>', {href: "http://vk.com/id" + vk.details.uid})
                     var avatar = $('<img>', {src: vk.details.photo_100});
                     avatarLink.append(avatar);
                     avatarWrapper.append(avatarLink);
-                    var profileInfo = $('<a>', {href: "http://vk.com/id"+vk.details.uid}).html(vk.details.first_name + " " + vk.details.last_name);
+                    var profileInfo = $('<a>', {href: "http://vk.com/id" + vk.details.uid}).html(vk.details.first_name + " " + vk.details.last_name);
                     var profile = $("<div>").append(avatarWrapper).append(profileInfo);
                     $(".authorise").replaceWith(profile);
                 }
-            } else sweetAlert("","Не удалось получить список аудиозаписей","error");
+            } else sweetAlert("", "Не удалось получить список аудиозаписей", "error");
             vk.getMusicCollection();
         });
     },
@@ -48,79 +48,132 @@ var vk = {
         var artist = song.artist;
         var file = song.file;
         var query = artist + " - " + title;
-        VK.Api.call('audio.search', {q: query, count: 5}, function (r) {
-            console.log(r.response);
-            if (r.response) {
-                r = r.response;
-                if(r.length <=1){
-                    vk.uploadSongFile(song);
-                } else {
-                    for (var i = 0; i < r.length; ++i) {
-                        if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
-                            if(r[i].artist == artist && r[i].title == title){
-                                var object = {};
-                                vk.musicCollection.find(function (element) {
-                                    if (element.artist == artist && element.title == title) {
-                                        object = element;
+        //setTimeout(function () {
+            VK.Api.call('audio.search', {q: query, count: 5}, function (r) {
+                //console.log(r.response);
+                if (r.response) {
+                    r = r.response;
+                    if (r.length <= 1) {
+                        vk.uploadSongFile(song);
+                    } else {
+                        for (var i = 0; i < r.length; ++i) {
+                            if (r[i].aid !== undefined && r[i].owner_id !== undefined) {
+                                if (r[i].artist == artist && r[i].title == title) {
+                                    var object = {};
+                                    vk.musicCollection.find(function (element) {
+                                        if (element.artist == artist && element.title == title) {
+                                            object = element;
+                                        }
+                                    });
+                                    if (Object.getOwnPropertyNames(object).length == 0) {
+                                        vk.musicSongAddToAccount(r[i].aid, r[i].owner_id, song);
+                                        break;
+                                    } else {
+                                        vk.removeAddedSong(song);
                                     }
-                                });
-                                //songs.find(function (element) {
-                                //    if (element.artist == artist && element.title == title) {
-                                //        object = element;
-                                //    }
-                                //});
-                                if(Object.getOwnPropertyNames(object).length == 0){
-                                    vk.musicSongAddToAccount(r[i].aid, r[i].owner_id, song);
-                                    break;
                                 }
                             }
                         }
                     }
+                } else {
+                    console.log(r);
+                    //sweetAlert("", "Не удалось найти и добавить песню.", "error");
                 }
-            } else sweetAlert("", "Не удалось найти и добавить песню.", "error");
-        })
+            });
+        //}, 1000);
     },
-    musicSongAddToAccount: function (audio_id, owner_id, object) {
-        VK.Api.call('audio.add', {audio_id: audio_id, owner_id: owner_id}, function (r) {
+    musicSongAddToAccount: function (audio_id, owner_id, object, captcha_sid, captcha_key) {
+        var objectToSend = {audio_id: audio_id, owner_id: owner_id};
+        if(captcha_sid && captcha_key){
+            objectToSend.captcha_sid = captcha_sid;
+            objectToSend.captcha_key = captcha_key;
+        }
+
+        vk.musicCollection.find(function (element) {
+            if (element.artist == object.artist && element.title == object.title) {
+                return false;
+            }
+        });
+
+        VK.Api.call('audio.add', objectToSend, function (r) {
+            if(r.error && r.error.error_code == 6){
+                setTimeout(function () {
+                    //console.log(audio_id, owner_id, object);
+                    vk.musicSongAddToAccount(audio_id, owner_id, object);
+                },1000);
+            }
+            if(r.error && r.error.error_code == 14){
+                var captchaSid = r.error.captcha_sid;
+                var captchaImg = r.error.captcha_img;
+                var captchaDiv = $("<div id='dialog"+captchaSid+"' />");
+                captchaDiv.append($('<img src="'+captchaImg+'" />')[0].outerHTML).append($('<input />')[0].outerHTML);
+                captchaDiv.dialog({
+                    autoOpen: true,
+                    height: 300,
+                    width: 350,
+                    modal: true,
+                    buttons: {
+                        "Отправить": function () {
+                            var captcha_key = captchaDiv.find('input').val();
+                            vk.musicSongAddToAccount(audio_id, owner_id, object, captchaSid, captcha_key);
+                        },
+                        Закрыть: function() {
+                            captchaDiv.dialog( "close" );
+                        }
+                    },
+                    close: function() {
+                        var widget = $(this).dialog("widget"), height = widget.height();
+                        widget
+                            .nextAll(".ui-dialog").not(widget.get(0))
+                            .each(function() { var t = $(this); t.css("top", (parseInt(t.css("top")) + height) + "px"); });
+                    }
+                });
+                //swal({title: "Введите капчу!", imageUrl: captchaImg});
+            }
             if (r.response) {
-                if(r.response){
-                    vk.removeAddedSong(object);
+                if (r.response) {
+                    vk.removeAddedSong(object, captcha_sid);
                 }
             } else {
-                sweetAlert("", "Не удалось добавить аудиозапись к вашему аккаунту!", "error");
+                //sweetAlert("", "Не удалось добавить аудиозапись к вашему аккаунту!", "error");
                 console.log(r);
             }
         })
     },
-    upload: function() {
-        if(vk.details){
-            for(var i in songs){
-                if(songs.hasOwnProperty(i)){
+    upload: function () {
+        if (vk.details) {
+            for (var i in songs) {
+                if (songs.hasOwnProperty(i)) {
                     var object = songs[i];
                     vk.musicSearch(object);
                 }
             }
-            sweetAlert("Загрузка завершена.");
+            window.readyInterval = setInterval(function () {
+                if (songs.length == 0) {
+                    clearInterval(window.readyInterval);
+                    sweetAlert("Загрузка завершена.");
+                }
+            }, 1000);
         } else {
-            sweetAlert("Вы не авторизованы","Пожалуйста, авторизуйтесь Вконтакте.", "error");
+            sweetAlert("Вы не авторизованы", "Пожалуйста, авторизуйтесь Вконтакте.", "error");
         }
     },
-    removeAddedSong: function(song) {
+    removeAddedSong: function (song, captcha_sid) {
         var object = {};
         songs.find(function (element) {
             if (element.artist == song.artist && element.title == song.title) {
                 object = element;
             }
         });
-        console.log(object, song);
-        if(object){
+        if (object) {
             songs = songs
                 .filter(function (el) {
                     return el.id !== song.id;
                 });
-            $('.name[data-id="'+ song.id +'"]').closest("tr").hide(500, function () {
+            $('.name[data-id="' + song.id + '"]').closest("tr").hide(500, function () {
                 $(this).remove();
             });
+            $("#dialog" + captcha_sid).dialog('close');
         }
     },
     getMusicCollection: function () {
@@ -134,12 +187,11 @@ var vk = {
             } else console.log("Не удалось получить список ваших аудиозаписей");
         })
     },
-    uploadSongFile: function(object) {
+    uploadSongFile: function (object) {
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '/upload.php');
 
-        xhr.upload.onprogress = function(e)
-        {
+        xhr.upload.onprogress = function (e) {
             /*
              * values that indicate the progression
              * e.loaded
@@ -147,14 +199,12 @@ var vk = {
              */
         };
 
-        xhr.onload = function()
-        {
+        xhr.onload = function () {
             // upload success
-            if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 0))
-            {
-                if(xhr.responseText){
+            if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status == 0)) {
+                if (xhr.responseText) {
                     var msg = JSON.parse(xhr.responseText);
-                    if(msg)
+                    if (msg)
                         VK.Api.call('audio.save', {audio: msg.audio, server: msg.server, hash: msg.hash}, function (r) {
                             console.log(r);
                             if (r.response) {
@@ -178,7 +228,7 @@ var vk = {
 
         xhr.send(form);
     },
-    getUploadServer: function() {
+    getUploadServer: function () {
         var serverUrl = "";
         VK.Api.call('audio.getUploadServer', {}, function (r) {
             if (r.response) {
@@ -196,10 +246,12 @@ var vk = {
 $(document).on('click', ".authorise", function () {
     vk.init();
 });
+$(function () {
+    $(".authorise").click(); //todo REMOVE
+});
 $(document).on('click', ".upload", function () {
     vk.upload();
 });
-
 
 songs = [];
 counter = 0;
